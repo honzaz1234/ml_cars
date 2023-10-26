@@ -1,3 +1,4 @@
+import ast
 import pandas as pd
 from unidecode import unidecode
 
@@ -105,3 +106,7 @@ def unify_val(df, col_name, log_df=log_df,cut_off=0.9):
                 log_df = pd.concat([log_df, log])
         print(log_df.groupby("type").count()) 
         return log_df
+
+def assign_dummy(row, col):
+    for val in ast.literal_eval(row[col]):
+        row.loc[val] = 1
