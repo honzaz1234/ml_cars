@@ -122,8 +122,6 @@ class PredictionSummary():
         self.summary_df = pd.concat([self.summary_df, pd.DataFrame(stat_row, index=[self.df_index])])
         self.df_index +=1
 
-
-
     def create_method_object(self, method: str, **kwargs):
         """factory method for creating skelarn method object based on string value
         """
