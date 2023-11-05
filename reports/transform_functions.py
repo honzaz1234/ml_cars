@@ -5,6 +5,9 @@ from unidecode import unidecode
 def create_share_df(
     df, col, color="blue", min_threshold=None, color_other=None,
     list_colours=None):
+    """creates data frame that can be used for plotting shares of observations of individual values of some column
+    """
+
     counts = df[col].value_counts()
     df_counts = pd.DataFrame()
     df_counts["counts"] = counts
@@ -24,6 +27,10 @@ def create_share_df(
     return df_counts
 
 def filter_outliers(df, col):
+    """filters out rows from data frame, in which there are outliers for some  
+    specified column
+    """
+
     Q1 = df[col].quantile(0.25)
     Q3 = df[col].quantile(0.75)
     # Calculate the IQR (Interquartile Range)
@@ -38,6 +45,8 @@ def remove_accents(string):
     return unidecode(string)
 
 def rename_cols(value, dict): 
+    """return value based on the dictionary mapping"""
+    
     if value in dict:
         return dict[value]
     elif value is None:
@@ -46,6 +55,9 @@ def rename_cols(value, dict):
         return "NC"
     
 def get_emissions_standard(row):
+    """function for assigning emission standard based on the date of registration of vehicle
+    """
+
     if row >= "2021-01-01":
         return "Euro 6d"
     elif row >= "2019-09-01":
@@ -68,6 +80,8 @@ def get_emissions_standard(row):
         return "Euro 1"
 
 def get_share(df, col, drop_na=False):
+    """function for getting shares of values of some column"""
+
     if drop_na == False:
         count = df.groupby(col, as_index=False, dropna=False)[col].size()
     else:
@@ -77,8 +91,14 @@ def get_share(df, col, drop_na=False):
     count["share"] = count["n"]/count["n"].sum()
     return count
     
-log_df = pd.DataFrame({"model":pd.Series(), "brand":pd.Series(), "type": pd.Series(), "share": pd.Series(), "n_obs": pd.Series(), "n_value": pd.Series()})
-def unify_val(df, col_name, log_df=log_df,cut_off=0.9):
+
+def unify_val(df, col_name, cut_off=0.9):
+        """function for reassigning values of some column based on values of observations that are the same model of car
+        cut_off attribute decides how much homogenous the values of the model in the data frame have to be so the value is reassigned;
+        example: cut_off=0.9 - 90% of the observations of the same model have to have the same value of the col_name, so the col_name is changed 
+        """
+
+        log_df = pd.DataFrame({"model":pd.Series(), "brand":pd.Series(), "type": pd.Series(), "share": pd.Series(), "n_obs": pd.Series(), "n_value": pd.Series()})
         distinct = df.groupby(["brand", "model"], as_index=False)[["brand", "model"]].size()
         for ind in range(0, distinct.shape[0]):
             model_val = distinct.iloc[ind, 1]
@@ -108,5 +128,7 @@ def unify_val(df, col_name, log_df=log_df,cut_off=0.9):
         return log_df
 
 def assign_dummy(row, col):
+    """assign 1 to column if its column name is found in a list in the col"""
+
     for val in ast.literal_eval(row[col]):
         row.loc[val] = 1
