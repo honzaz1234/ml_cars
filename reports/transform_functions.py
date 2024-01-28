@@ -1,4 +1,5 @@
 import ast
+import datetime
 import pandas as pd
 from unidecode import unidecode
 
@@ -54,29 +55,36 @@ def rename_cols(value, dict):
     else:
         return "NC"
     
+def create_NA_counts_table(data, col_name):
+    data.shape[1]
+    n_NA = data.isna().sum().to_frame()
+    n_NA.columns = [col_name]
+    n_NA['(%)'] = ((n_NA[col_name] / data.shape[0]) * 100).round(3)
+    return n_NA
+
 def get_emissions_standard(row):
     """function for assigning emission standard based on the date of registration of vehicle
     """
 
-    if row >= "2021-01-01":
+    if row.date() >= datetime.date(2021, 1, 1):
         return "Euro 6d"
-    elif row >= "2019-09-01":
+    elif row.date() >= datetime.date(2019, 9, 1):
         return "Euro 6d-TEMP"
-    elif row >= "2018-09-01":
+    elif row.date() >= datetime.date(2018, 9, 1):
         return "Euro 6c"
-    elif row >= "2015-09-01":
+    elif row.date() >= datetime.date(2015, 9, 1):
         return "Euro 6b"
-    elif row >= "2013-01-01":
+    elif row.date() >= datetime.date(2013, 1, 1):
         return "Euro 5b"
-    elif row >= "2011-01-01":
+    elif row.date() >= datetime.date(2011, 1, 1):
         return "Euro 5a"
-    elif row >= "2006-01-01":
+    elif row.date() >= datetime.date(2006, 1, 1):
         return "Euro 4"
-    elif row >= "2001-01-01":
+    elif row.date() >= datetime.date(2001, 1, 1):
         return "Euro 3"
-    elif row >= "1997-01-01":
+    elif row.date() >= datetime.date(1997, 1, 1):
         return "Euro 2"
-    elif row >= "1993-01-01":
+    elif row.date() >= datetime.date(1993, 1, 1):
         return "Euro 1"
 
 def get_share(df, col, drop_na=False):
@@ -116,15 +124,15 @@ def unify_val(df, col_name, cut_off=0.9):
                 share_max = shares["share"].max()
             if shares.shape[0] == 1:
                 continue
+            n_changed = round((1 - share_max) * df_val.shape[0])
             if shares_wNA["share"].max() < cut_off:
-                log = pd.DataFrame({"brand": brand_val, "model": model_val, "type": "undecided", "share": share_max, "n_obs": n_obs, "n_value": share_max_value, "n_distinct": n_distinct}, index=[0])
+                log = pd.DataFrame({"brand": brand_val, "model": model_val, "type": "undecided", "share": share_max, "n_obs": n_changed, "n_value": share_max_value, "n_distinct": n_distinct}, index=[0])
                 log_df = pd.concat([log_df, log])
                 continue
             else:
                 df.loc[(df["brand"] == brand_val) & (df["model"] == model_val), col_name] = share_max_value
-                log = pd.DataFrame({"brand": brand_val, "model": model_val, "type": "most_other", "share": share_max, "n_obs": n_obs, "n_value": share_max_value, "n_distinct": n_distinct}, index=[0])
+                log = pd.DataFrame({"brand": brand_val, "model": model_val, "type": "most_other", "share": share_max, "n_obs": n_changed, "n_value": share_max_value, "n_distinct": n_distinct}, index=[0])
                 log_df = pd.concat([log_df, log])
-        print(log_df.groupby("type").count()) 
         return log_df
 
 def assign_dummy(row, col):
